@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:15.1-alpine
+    env_file:
+      - ./db.env
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/init.sql
+      - db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: .
+    container_name: balance_api
+    env_file:
+      - ./app.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  db:
+    driver: local
