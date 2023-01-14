@@ -10,6 +10,14 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type Transfer struct {
+	ID         int64     `json:"id"`
+	FromUserID int64     `json:"from_user_id"`
+	ToUserID   int64     `json:"to_user_id"`
+	Amount     string    `json:"amount"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
 type User struct {
 	ID        int64           `json:"id"`
 	Name      string          `json:"name"`
