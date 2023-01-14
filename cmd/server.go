@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	userAPI "github.com/semka95/balance-service/api"
+	transferStore "github.com/semka95/balance-service/transfer/repository"
 	userStore "github.com/semka95/balance-service/user/repository"
 )
 
@@ -45,9 +46,10 @@ func (s *RestServer) RunServer() {
 	}
 
 	// init router
-	store := userStore.New(db)
+	uStore := userStore.New(db)
+	tStore := transferStore.New(db)
 	api := userAPI.API{}
-	router := api.NewRouter(store, db)
+	router := api.NewRouter(uStore, tStore, db)
 
 	// init http server
 	srv := &http.Server{
