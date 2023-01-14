@@ -362,20 +362,28 @@ func (a *API) transfer(w http.ResponseWriter, r *http.Request) {
 	}
 	userTo.Balance = userTo.Balance.Add(params.Amount)
 
-	result := make([]userModel.User, 0, 2)
-	rows, err := a.userStore.UpdateBalance(r.Context(), userModel.UpdateBalanceParams{ID: userFrom.ID, Balance: userFrom.Balance})
+	_, err = a.userStore.UpdateBalance(r.Context(), userModel.UpdateBalanceParams{ID: userFrom.ID, Balance: userFrom.Balance})
 	if err != nil {
 		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't update balance")
 		return
 	}
-	result = append(result, rows)
 
-	rows, err = a.userStore.UpdateBalance(r.Context(), userModel.UpdateBalanceParams{ID: userTo.ID, Balance: userTo.Balance})
+	_, err = a.userStore.UpdateBalance(r.Context(), userModel.UpdateBalanceParams{ID: userTo.ID, Balance: userTo.Balance})
 	if err != nil {
 		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't update balance")
 		return
 	}
-	result = append(result, rows)
+
+	trParams := transferModel.CreateTransferParams{
+		FromUserID: userFrom.ID,
+		ToUserID:   userTo.ID,
+		Amount:     params.Amount,
+	}
+	transfer, err := a.transferStore.CreateTransfer(r.Context(), trParams)
+	if err != nil {
+		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't create transfer record")
+		return
+	}
 
 	if err := tx.Commit(); err != nil {
 		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't commit transaction")
@@ -383,5 +391,5 @@ func (a *API) transfer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, result)
+	render.JSON(w, r, transfer)
 }
