@@ -182,6 +182,7 @@ func (a *API) getTransfersBetweenUsers(w http.ResponseWriter, r *http.Request) {
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, transfers)
 }
+
 // GET /user/{id} - returns user balance
 func (a *API) getBalance(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
@@ -201,7 +202,7 @@ func (a *API) getBalance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, map[string]any{"balance": user.Balance.String()})
+	render.JSON(w, r, JSON{"balance": user.Balance.String()})
 }
 
 // PUT /user/deposit - deposits money to user balance
@@ -317,7 +318,7 @@ func (a *API) createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusCreated)
-	render.JSON(w, r, &user)
+	render.JSON(w, r, user)
 }
 
 // PUT /user/transfer - transfers money from one user to another

@@ -8,7 +8,7 @@ import (
 )
 
 // JSON is a map alias
-type JSON map[string]interface{}
+type JSON map[string]any
 
 // SendErrorJSON sends error as json
 func SendErrorJSON(w http.ResponseWriter, r *http.Request, httpStatusCode int, err error, details string) {
