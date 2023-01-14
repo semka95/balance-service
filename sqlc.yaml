@@ -1,0 +1,15 @@
+version: "2"
+sql:
+  - schema: "./schema.sql"
+    queries: "./user/repository/queries.sql"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "repository"
+        out: "./user/repository/"
+        output_models_file_name: "./models.go"
+        emit_json_tags: true
+        emit_interface: true
+        overrides:
+          - column: "users.balance"
+            go_type: "github.com/shopspring/decimal.Decimal"
