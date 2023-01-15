@@ -12,11 +12,8 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users(
-    name, email, balance
-) VALUES (
-    $1, $2, $3
-)
+INSERT INTO users(name, email, balance)
+VALUES ($1, $2, $3)
 RETURNING id, name, email, balance, created_at
 `
 
@@ -40,8 +37,10 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, name, email, balance, created_at FROM users
-WHERE id = $1 LIMIT 1
+SELECT id, name, email, balance, created_at
+FROM users
+WHERE id = $1
+LIMIT 1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
@@ -58,8 +57,10 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, balance, created_at FROM users
-WHERE email = $1 LIMIT 1
+SELECT id, name, email, balance, created_at
+FROM users
+WHERE email = $1
+LIMIT 1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -76,7 +77,8 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const updateBalance = `-- name: UpdateBalance :one
-UPDATE users SET balance = $2
+UPDATE users
+SET balance = $2
 WHERE id = $1
 RETURNING id, name, email, balance, created_at
 `
