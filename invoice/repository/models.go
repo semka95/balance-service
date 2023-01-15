@@ -57,14 +57,14 @@ func (ns NullValidStatus) Value() (driver.Value, error) {
 }
 
 type Invoice struct {
-	ID            int64       `json:"id"`
-	ServiceID     int64       `json:"service_id"`
-	OrderID       int64       `json:"order_id"`
-	UserID        int64       `json:"user_id"`
-	Amount        string      `json:"amount"`
-	PaymentStatus ValidStatus `json:"payment_status"`
-	CreatedAt     time.Time   `json:"created_at"`
-	UpdatedAt     time.Time   `json:"updated_at"`
+	ID            int64           `json:"id"`
+	ServiceID     int64           `json:"service_id"`
+	OrderID       int64           `json:"order_id"`
+	UserID        int64           `json:"user_id"`
+	Amount        decimal.Decimal `json:"amount"`
+	PaymentStatus ValidStatus     `json:"payment_status"`
+	CreatedAt     time.Time       `json:"created_at"`
+	UpdatedAt     time.Time       `json:"updated_at"`
 }
 
 type Transfer struct {
@@ -76,9 +76,9 @@ type Transfer struct {
 }
 
 type User struct {
-	ID        int64           `json:"id"`
-	Name      string          `json:"name"`
-	Email     string          `json:"email"`
-	Balance   decimal.Decimal `json:"balance"`
-	CreatedAt time.Time       `json:"created_at"`
+	ID        int64     `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Balance   string    `json:"balance"`
+	CreatedAt time.Time `json:"created_at"`
 }

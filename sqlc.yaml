@@ -26,3 +26,16 @@ sql:
         overrides:
           - column: "transfers.amount"
             go_type: "github.com/shopspring/decimal.Decimal"
+  - schema: "./schema.sql"
+    queries: "./invoice/repository/queries.sql"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "repository"
+        out: "./invoice/repository/"
+        output_models_file_name: "./models.go"
+        emit_json_tags: true
+        emit_interface: true
+        overrides:
+          - column: "invoices.amount"
+            go_type: "github.com/shopspring/decimal.Decimal"
