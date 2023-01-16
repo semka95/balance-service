@@ -31,13 +31,13 @@ func (a *API) NewRouter(userStore userModel.Querier, tranferStore transferModel.
 		rapi.Put("/deposit", a.depositMoney)
 		rapi.Put("/withdraw", a.withdrawMoney)
 		rapi.Post("/", a.createUser)
-		rapi.Put("/transfer", a.transfer)
 	})
 	r.Route("/api/v1/transfer", func(rapi chi.Router) {
 		rapi.Get("/{id}", a.getTransfer)
 		rapi.Get("/{user_id}/inbound", a.getInboundTransfers)
 		rapi.Get("/{user_id}/outbound", a.getOutboundTransfers)
 		rapi.Get("/{from_uid}/to/{to_uid}", a.getTransfersBetweenUsers)
+		rapi.Post("/", a.transfer)
 	})
 	r.Route("/api/v1/invoice", func(rapi chi.Router) {
 		rapi.Get("/{id}", a.getInvoice)
