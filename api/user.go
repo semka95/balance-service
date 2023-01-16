@@ -38,11 +38,18 @@ func (a *API) getBalance(w http.ResponseWriter, r *http.Request) {
 
 // PUT /user/deposit - deposits money to user balance
 func (a *API) depositMoney(w http.ResponseWriter, r *http.Request) {
+	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		SendErrorJSON(w, r, http.StatusBadRequest, err, "invalid user id")
+		return
+	}
 	params := userModel.UpdateBalanceParams{}
 	if err := render.DecodeJSON(r.Body, &params); err != nil {
 		SendErrorJSON(w, r, http.StatusBadRequest, err, "invalid request body, can't decode it to balance")
 		return
 	}
+	params.ID = int64(userID)
+
 	if params.Balance.IsNegative() || params.Balance.IsZero() {
 		SendErrorJSON(w, r, http.StatusBadRequest, errors.New(""), fmt.Sprintf("invalid balance: %s, should be greater then zero", params.Balance.String()))
 		return
@@ -82,11 +89,18 @@ func (a *API) depositMoney(w http.ResponseWriter, r *http.Request) {
 
 // PUT /user/withdraw - withdraws money from user balance
 func (a *API) withdrawMoney(w http.ResponseWriter, r *http.Request) {
+	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		SendErrorJSON(w, r, http.StatusBadRequest, err, "invalid user id")
+		return
+	}
 	params := userModel.UpdateBalanceParams{}
 	if err := render.DecodeJSON(r.Body, &params); err != nil {
 		SendErrorJSON(w, r, http.StatusBadRequest, err, "invalid request body, can't decode it to balance")
 		return
 	}
+	params.ID = int64(userID)
+
 	if params.Balance.IsNegative() || params.Balance.IsZero() {
 		SendErrorJSON(w, r, http.StatusBadRequest, errors.New(""), fmt.Sprintf("invalid balance: %s, should be greater then zero", params.Balance.String()))
 		return

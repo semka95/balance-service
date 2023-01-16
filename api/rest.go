@@ -28,8 +28,8 @@ func (a *API) NewRouter(userStore userModel.Querier, tranferStore transferModel.
 	r := chi.NewRouter()
 	r.Route("/api/v1/user", func(rapi chi.Router) {
 		rapi.Get("/{id}", a.getBalance)
-		rapi.Put("/deposit", a.depositMoney)
-		rapi.Put("/withdraw", a.withdrawMoney)
+		rapi.Put("/{id}/deposit", a.depositMoney)
+		rapi.Put("/{id}/withdraw", a.withdrawMoney)
 		rapi.Post("/", a.createUser)
 	})
 	r.Route("/api/v1/transfer", func(rapi chi.Router) {
