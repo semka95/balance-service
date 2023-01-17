@@ -6,28 +6,21 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/semka95/balance-service/domain"
-	invoiceModel "github.com/semka95/balance-service/invoice/repository"
-	transferModel "github.com/semka95/balance-service/transfer/repository"
-	userModel "github.com/semka95/balance-service/user/repository"
 )
 
 // API represents rest api
 type API struct {
-	userStore     userModel.Querier
 	userUcase     domain.UserUsecase
-	transferStore transferModel.Querier
 	transferUcase domain.TransferUsecase
-	invoiceStore  invoiceModel.Querier
+	invoiceUcase  domain.InvoiceUsecase
 	db            *sql.DB
 }
 
 // NewRouter creates api router
-func (a *API) NewRouter(userStore userModel.Querier, userUcase domain.UserUsecase, tranferStore transferModel.Querier, transferUcase domain.TransferUsecase, invoiceStore invoiceModel.Querier, db *sql.DB) chi.Router {
-	a.userStore = userStore
+func (a *API) NewRouter(userUcase domain.UserUsecase, transferUcase domain.TransferUsecase, invoiceUcase domain.InvoiceUsecase, db *sql.DB) chi.Router {
 	a.userUcase = userUcase
-	a.transferStore = tranferStore
 	a.transferUcase = transferUcase
-	a.invoiceStore = invoiceStore
+	a.invoiceUcase = invoiceUcase
 	a.db = db
 
 	r := chi.NewRouter()

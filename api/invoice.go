@@ -3,7 +3,6 @@ package api
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -21,9 +20,9 @@ func (a *API) getInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	invoice, err := a.invoiceStore.GetInvoiceByID(r.Context(), int64(invID))
+	invoice, err := a.invoiceUcase.GetInvoiceByID(r.Context(), int64(invID))
 	if errors.Is(err, sql.ErrNoRows) {
-		SendErrorJSON(w, r, http.StatusNotFound, err, fmt.Sprintf("invoice with %d id not found", invID))
+		render.Status(r, http.StatusNoContent)
 		return
 	}
 	if err != nil {
@@ -57,9 +56,9 @@ func (a *API) getInvoiceByUserID(w http.ResponseWriter, r *http.Request) {
 		Limit:  int32(limit),
 	}
 
-	invoices, err := a.invoiceStore.GetInvoicesByUserID(r.Context(), params)
-	if errors.Is(err, sql.ErrNoRows) {
-		SendErrorJSON(w, r, http.StatusNotFound, err, fmt.Sprintf("invoice with %d id not found", uID))
+	invoices, err := a.invoiceUcase.GetInvoicesByUserID(r.Context(), params)
+	if len(invoices) == 0 {
+		render.Status(r, http.StatusNoContent)
 		return
 	}
 	if err != nil {
@@ -80,7 +79,7 @@ func (a *API) createInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	invoice, err := a.invoiceStore.CreateInvoice(r.Context(), params)
+	invoice, err := a.invoiceUcase.CreateInvoice(r.Context(), params)
 	if err != nil {
 		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't invoice user")
 		return
@@ -98,38 +97,21 @@ func (a *API) acceptInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx, err := a.db.BeginTx(r.Context(), nil)
-	if err != nil {
-		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't start transaction")
-		return
-	}
-	defer tx.Rollback()
-
 	params := invoiceModel.UpdateStatusParams{
 		ID:            int64(invID),
 		PaymentStatus: invoiceModel.ValidStatusAccepted,
 	}
-	_, err = a.invoiceStore.GetInvoiceByID(r.Context(), params.ID)
+
+	invoice, err := a.invoiceUcase.UpdateStatus(r.Context(), params)
 	if errors.Is(err, sql.ErrNoRows) {
 		SendErrorJSON(w, r, http.StatusNotFound, err, "invoice not found")
 		return
 	}
 	if err != nil {
-		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't get invoice")
-		return
-	}
-
-	rows, err := a.invoiceStore.UpdateStatus(r.Context(), params)
-	if err != nil {
 		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't update invoice")
 		return
 	}
 
-	if err := tx.Commit(); err != nil {
-		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't commit transaction")
-		return
-	}
-
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, rows)
+	render.JSON(w, r, invoice)
 }
