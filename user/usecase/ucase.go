@@ -28,11 +28,8 @@ func New(userStore userModel.Querier, db *sql.DB) domain.UserUsecase {
 // GetUser returns User by id
 func (uc *userUcase) GetUser(ctx context.Context, id int64) (*userModel.User, error) {
 	user, err := uc.userStore.GetUser(ctx, id)
-	if err != nil {
-		return nil, err
-	}
 
-	return &user, nil
+	return &user, err
 }
 
 // CreateUser creates new user
