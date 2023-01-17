@@ -9,9 +9,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"github.com/lib/pq"
 
 	transferModel "github.com/semka95/balance-service/transfer/repository"
-	userModel "github.com/semka95/balance-service/user/repository"
 )
 
 // GET /transfer/{id} - returns transfer by id
@@ -22,9 +22,9 @@ func (a *API) getTransfer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	transfer, err := a.transferStore.GetTransferByID(r.Context(), int64(trID))
+	transfer, err := a.transferUcase.GetTransfer(r.Context(), int64(trID))
 	if errors.Is(err, sql.ErrNoRows) {
-		SendErrorJSON(w, r, http.StatusNotFound, err, fmt.Sprintf("transfer with %d id not found", trID))
+		render.Status(r, http.StatusNoContent)
 		return
 	}
 	if err != nil {
@@ -58,13 +58,13 @@ func (a *API) getInboundTransfers(w http.ResponseWriter, r *http.Request) {
 		Limit:    int32(limit),
 	}
 
-	transfers, err := a.transferStore.GetInboundTransfers(r.Context(), params)
+	transfers, err := a.transferUcase.GetInboundTransfers(r.Context(), params)
 	if err != nil {
 		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't get transfers")
 		return
 	}
 	if len(transfers) == 0 {
-		SendErrorJSON(w, r, http.StatusBadRequest, fmt.Errorf("no inbound transfers was found for %d user id", userID), "no transfers found")
+		render.Status(r, http.StatusNoContent)
 		return
 	}
 
@@ -94,13 +94,13 @@ func (a *API) getOutboundTransfers(w http.ResponseWriter, r *http.Request) {
 		Limit:      int32(limit),
 	}
 
-	transfers, err := a.transferStore.GetOutboundTransfers(r.Context(), params)
+	transfers, err := a.transferUcase.GetOutboundTransfers(r.Context(), params)
 	if err != nil {
 		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't get transfers")
 		return
 	}
 	if len(transfers) == 0 {
-		SendErrorJSON(w, r, http.StatusBadRequest, fmt.Errorf("no outbound transfers was found for %d user id", userID), "no transfers found")
+		render.Status(r, http.StatusNoContent)
 		return
 	}
 
@@ -137,13 +137,13 @@ func (a *API) getTransfersBetweenUsers(w http.ResponseWriter, r *http.Request) {
 		Limit:      int32(limit),
 	}
 
-	transfers, err := a.transferStore.GetTransfersBetweenUsers(r.Context(), params)
+	transfers, err := a.transferUcase.GetTransfersBetweenUsers(r.Context(), params)
 	if err != nil {
 		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't get transfers")
 		return
 	}
 	if len(transfers) == 0 {
-		SendErrorJSON(w, r, http.StatusBadRequest, fmt.Errorf("no transfers was found between %d user and %d user", fromUID, toUID), "no transfers found")
+		render.Status(r, http.StatusNoContent)
 		return
 	}
 
@@ -151,73 +151,26 @@ func (a *API) getTransfersBetweenUsers(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, transfers)
 }
 
-// POST /transfer - transfers money from one user to another
-func (a *API) transfer(w http.ResponseWriter, r *http.Request) {
-	params := userModel.TransferMoneyParams{}
+// POST /createTransfer - transfers money from one user to another
+func (a *API) createTransfer(w http.ResponseWriter, r *http.Request) {
+	params := transferModel.CreateTransferParams{}
 	if err := render.DecodeJSON(r.Body, &params); err != nil {
 		SendErrorJSON(w, r, http.StatusBadRequest, err, "invalid request body, can't decode it to balance")
 		return
 	}
 
-	tx, err := a.db.BeginTx(r.Context(), nil)
-	if err != nil {
-		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't start transaction")
-		return
-	}
-	defer tx.Rollback()
-
-	userFrom, err := a.userStore.GetUser(r.Context(), params.FromUserID)
+	transfer, err := a.transferUcase.CreateTransfer(r.Context(), params)
 	if errors.Is(err, sql.ErrNoRows) {
 		SendErrorJSON(w, r, http.StatusNotFound, err, "user not found")
 		return
 	}
-	if err != nil {
-		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't update balance")
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) && pqErr.Constraint == "users_balance_check" {
+		SendErrorJSON(w, r, http.StatusBadRequest, err, fmt.Sprintf("not enough money on '%d' balance", params.FromUserID))
 		return
 	}
-	userTo, err := a.userStore.GetUser(r.Context(), params.ToUserID)
-	if errors.Is(err, sql.ErrNoRows) {
-		SendErrorJSON(w, r, http.StatusNotFound, err, "user not found")
-		return
-	}
-	if err != nil {
-		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't update balance")
-		return
-	}
-
-	userFrom.Balance = userFrom.Balance.Sub(params.Amount)
-	// TODO: maybe redundant, because database ensures it's not negative
-	if userFrom.Balance.IsNegative() {
-		SendErrorJSON(w, r, http.StatusBadRequest, errors.New(""), fmt.Sprintf("not enough money on balance, available only %s", userFrom.Balance))
-		return
-	}
-	userTo.Balance = userTo.Balance.Add(params.Amount)
-
-	_, err = a.userStore.UpdateBalance(r.Context(), userModel.UpdateBalanceParams{ID: userFrom.ID, Balance: userFrom.Balance})
-	if err != nil {
-		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't update balance")
-		return
-	}
-
-	_, err = a.userStore.UpdateBalance(r.Context(), userModel.UpdateBalanceParams{ID: userTo.ID, Balance: userTo.Balance})
-	if err != nil {
-		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't update balance")
-		return
-	}
-
-	trParams := transferModel.CreateTransferParams{
-		FromUserID: userFrom.ID,
-		ToUserID:   userTo.ID,
-		Amount:     params.Amount,
-	}
-	transfer, err := a.transferStore.CreateTransfer(r.Context(), trParams)
 	if err != nil {
 		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't create transfer record")
-		return
-	}
-
-	if err := tx.Commit(); err != nil {
-		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't commit transaction")
 		return
 	}
 

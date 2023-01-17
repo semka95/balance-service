@@ -14,6 +14,7 @@ import (
 	userAPI "github.com/semka95/balance-service/api"
 	invoiceStore "github.com/semka95/balance-service/invoice/repository"
 	transferStore "github.com/semka95/balance-service/transfer/repository"
+	transferUcase "github.com/semka95/balance-service/transfer/usecase"
 	userStore "github.com/semka95/balance-service/user/repository"
 	userUcase "github.com/semka95/balance-service/user/usecase"
 )
@@ -51,9 +52,10 @@ func (s *RestServer) RunServer() {
 	uStore := userStore.New(db)
 	uUcase := userUcase.New(uStore, db)
 	tStore := transferStore.New(db)
+	tUcase := transferUcase.New(tStore, uStore, db)
 	invStore := invoiceStore.New(db)
 	api := userAPI.API{}
-	router := api.NewRouter(uStore, uUcase, tStore, invStore, db)
+	router := api.NewRouter(uStore, uUcase, tStore, tUcase, invStore, db)
 
 	// init http server
 	srv := &http.Server{

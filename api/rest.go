@@ -16,15 +16,17 @@ type API struct {
 	userStore     userModel.Querier
 	userUcase     domain.UserUsecase
 	transferStore transferModel.Querier
+	transferUcase domain.TransferUsecase
 	invoiceStore  invoiceModel.Querier
 	db            *sql.DB
 }
 
 // NewRouter creates api router
-func (a *API) NewRouter(userStore userModel.Querier, userUcase domain.UserUsecase, tranferStore transferModel.Querier, invoiceStore invoiceModel.Querier, db *sql.DB) chi.Router {
+func (a *API) NewRouter(userStore userModel.Querier, userUcase domain.UserUsecase, tranferStore transferModel.Querier, transferUcase domain.TransferUsecase, invoiceStore invoiceModel.Querier, db *sql.DB) chi.Router {
 	a.userStore = userStore
 	a.userUcase = userUcase
 	a.transferStore = tranferStore
+	a.transferUcase = transferUcase
 	a.invoiceStore = invoiceStore
 	a.db = db
 
@@ -40,7 +42,7 @@ func (a *API) NewRouter(userStore userModel.Querier, userUcase domain.UserUsecas
 		rapi.Get("/{user_id}/inbound", a.getInboundTransfers)
 		rapi.Get("/{user_id}/outbound", a.getOutboundTransfers)
 		rapi.Get("/{from_uid}/to/{to_uid}", a.getTransfersBetweenUsers)
-		rapi.Post("/", a.transfer)
+		rapi.Post("/", a.createTransfer)
 	})
 	r.Route("/api/v1/invoice", func(rapi chi.Router) {
 		rapi.Get("/{id}", a.getInvoice)
