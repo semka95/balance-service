@@ -110,12 +110,12 @@ func (a *API) getOutboundTransfers(w http.ResponseWriter, r *http.Request) {
 
 // GET /transfer/{from_uid}/to/{to_uid}?limit=5&cursor=0 - returns transfers between users
 func (a *API) getTransfersBetweenUsers(w http.ResponseWriter, r *http.Request) {
-	from_uid, err := strconv.Atoi(chi.URLParam(r, "from_uid"))
+	fromUID, err := strconv.Atoi(chi.URLParam(r, "from_uid"))
 	if err != nil {
 		SendErrorJSON(w, r, http.StatusBadRequest, err, "invalid from user id")
 		return
 	}
-	to_uid, err := strconv.Atoi(chi.URLParam(r, "to_uid"))
+	toUID, err := strconv.Atoi(chi.URLParam(r, "to_uid"))
 	if err != nil {
 		SendErrorJSON(w, r, http.StatusBadRequest, err, "invalid to user id")
 		return
@@ -131,8 +131,8 @@ func (a *API) getTransfersBetweenUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := transferModel.GetTransfersBetweenUsersParams{
-		FromUserID: int64(from_uid),
-		ToUserID:   int64(to_uid),
+		FromUserID: int64(fromUID),
+		ToUserID:   int64(toUID),
 		ID:         int64(cursor),
 		Limit:      int32(limit),
 	}
@@ -143,7 +143,7 @@ func (a *API) getTransfersBetweenUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(transfers) == 0 {
-		SendErrorJSON(w, r, http.StatusBadRequest, fmt.Errorf("no transfers was found between %d user and %d user", from_uid, to_uid), "no transfers found")
+		SendErrorJSON(w, r, http.StatusBadRequest, fmt.Errorf("no transfers was found between %d user and %d user", fromUID, toUID), "no transfers found")
 		return
 	}
 

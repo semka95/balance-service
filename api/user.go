@@ -45,7 +45,7 @@ func (a *API) depositMoney(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := userModel.UpdateBalanceParams{}
-	if err := render.DecodeJSON(r.Body, &params); err != nil {
+	if err = render.DecodeJSON(r.Body, &params); err != nil {
 		SendErrorJSON(w, r, http.StatusBadRequest, err, "invalid request body, can't decode it to balance")
 		return
 	}
@@ -79,7 +79,7 @@ func (a *API) withdrawMoney(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := userModel.UpdateBalanceParams{}
-	if err := render.DecodeJSON(r.Body, &params); err != nil {
+	if err = render.DecodeJSON(r.Body, &params); err != nil {
 		SendErrorJSON(w, r, http.StatusBadRequest, err, "invalid request body, can't decode it to balance")
 		return
 	}
