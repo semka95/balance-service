@@ -1,7 +1,6 @@
 package api
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -63,7 +62,7 @@ func (a *API) depositMoney(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, user)
 }
 
-// PUT /user/{id}/withdraw - withdraws money from user balance
+// PATCH /user/{id}/withdraw - withdraws money from user balance
 func (a *API) withdrawMoney(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
@@ -79,18 +78,14 @@ func (a *API) withdrawMoney(w http.ResponseWriter, r *http.Request) {
 	params.ID = int64(userID)
 
 	if params.Balance.IsNegative() || params.Balance.IsZero() {
-		SendErrorJSON(w, r, http.StatusBadRequest, errors.New(""), fmt.Sprintf("invalid balance: %s, should be greater then zero", params.Balance.String()))
+		SendErrorJSON(w, r, http.StatusBadRequest, errors.New("bad balance"), fmt.Sprintf("invalid balance: %s, should be greater than zero", params.Balance.String()))
 		return
 	}
 
 	params.Balance = params.Balance.Neg()
 	user, err := a.userUcase.UpdateBalance(r.Context(), params)
-	if errors.Is(err, sql.ErrNoRows) {
-		SendErrorJSON(w, r, http.StatusNotFound, err, "user not found")
-		return
-	}
 	if err != nil {
-		SendErrorJSON(w, r, http.StatusInternalServerError, err, "")
+		SendErrorJSON(w, r, domain.GetStatusCode(err), err, "can't withdraw money from user")
 		return
 	}
 
