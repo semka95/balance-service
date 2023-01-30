@@ -33,4 +33,8 @@ mock:
 sqlc:
 	sqlc generate
 
-.PHONY: test engine unittest test-coverage clean docker run stop lint mock sqlc
+rebuild:
+	docker compose stop backend
+	docker-compose up --build --force-recreate --no-deps -d backend
+
+.PHONY: test engine unittest test-coverage clean docker run stop lint mock sqlc rebuild
