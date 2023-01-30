@@ -1,0 +1,437 @@
+openapi: 3.1.0
+info:
+  title: Balance Service Api
+  version: "1"
+  summary: Balance Service Api
+  description: Balance Service Api
+  license:
+    name: MIT
+    url: "https://opensource.org/licenses/MIT"
+servers:
+  - url: "http://127.0.0.1:8080/api/v1"
+paths:
+  "/user/{id}":
+    get:
+      summary: Get User Balance
+      operationId: get-user
+      description: get user balance
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/cursor"
+      responses:
+        "200":
+          $ref: "#/components/responses/UserBalance"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                bad user id:
+                  value:
+                    details: invalid user id
+                    error: 'strconv.Atoi: parsing "sdfsdf": invalid syntax'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example 1:
+                  value:
+                    details: can't get user balance
+                    error: "user 0 not found: sql: no rows in result set"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example 1:
+                  value:
+                    details: can't get user balance
+                    error: server error
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+        description: user id
+  "/user/{id}/deposit":
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+        description: user id
+    patch:
+      summary: Deposit money to user
+      operationId: patch-user-user_id-deposit
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              examples:
+                ok:
+                  value:
+                    id: 1
+                    name: John Doe
+                    email: john@gmail.com
+                    balance: 233.45
+                    created_at: "2023-01-27T14:15:22Z"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalid user id:
+                  value:
+                    details: invalid user id
+                    error: 'strconv.Atoi: parsing "dfwf": invalid syntax'
+                invalid balance:
+                  value:
+                    details: "invalid balance: -10, should be greater then zero"
+                    error: bad balance
+                invalid request body:
+                  value:
+                    details: "invalid request body, can't decode it to balance"
+                    error: unexpected EOF
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                user not found:
+                  value:
+                    details: can't deposit money to user
+                    error: "user 0 not found: sql: no rows in result set"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                server error:
+                  value:
+                    details: can't deposit money to user
+                    error: can't start transaction
+      description: deposit money to user account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                balance:
+                  type: number
+                  format: decimal
+            examples:
+              Example 1:
+                value:
+                  balance: 125.54
+  "/user/{id}/withdraw":
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+        description: user id
+    patch:
+      summary: Withdraw money from user
+      operationId: patch-user-user_id-withdraw
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              examples:
+                ok:
+                  value:
+                    id: 1
+                    name: John Doe
+                    email: john@gmail.com
+                    balance: 233.45
+                    created_at: "2023-01-27T14:15:22Z"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalid user id:
+                  value:
+                    details: invalid user id
+                    error: 'strconv.Atoi: parsing "dfwf": invalid syntax'
+                invalid balance:
+                  value:
+                    details: "invalid balance: -10, should be greater then zero"
+                    error: bad balance
+                invalid request body:
+                  value:
+                    details: "invalid request body, can't decode it to balance"
+                    error: unexpected EOF
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                user not found:
+                  value:
+                    details: can't withdraw money from user
+                    error: "user 0 not found: sql: no rows in result set"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                server error:
+                  value:
+                    details: can't withdraw money from user
+                    error: can't start transaction
+      description: withdraw money from user account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                balance:
+                  type: number
+                  format: decimal
+            examples:
+              Example 1:
+                value:
+                  balance: 125.54
+  /user:
+    post:
+      summary: Create user
+      operationId: post-user
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              examples:
+                Example 1:
+                  value:
+                    id: 1
+                    name: John Doe
+                    email: john@gmail.com
+                    balance: 0
+                    created_at: "2023-01-27T14:15:22Z"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalid request body:
+                  value:
+                    details: "invalid request body, can't decode it to user"
+                    error: unexpected EOF
+                email already exists:
+                  value:
+                    details: user with email 'john@gmail.com' already exists
+                    error: 'pq: duplicate key value violates unique constraint "users_email_key"'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                server error:
+                  value:
+                    details: can't create user
+                    error: server error
+      description: create user
+      requestBody:
+        $ref: "#/components/requestBodies/CreateUser"
+components:
+  schemas:
+    User:
+      title: User
+      type: object
+      examples:
+        - id: 1
+          name: John Doe
+          email: john@gmail.com
+          balance: 23545.45
+          created_at: "2023-01-27T14:15:22Z"
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the given user.
+          format: int64
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        balance:
+          type: number
+          format: decimal
+        created_at:
+          type: string
+          format: date-time
+      description: User model
+    Transfer:
+      title: Transfer
+      type: object
+      description: Transfer model
+      properties:
+        id:
+          type: integer
+          format: int64
+        from_user_id:
+          type: integer
+          format: int64
+        to_user_id:
+          type: integer
+          format: int64
+        amount:
+          type: number
+          format: decimal
+        created_at:
+          type: string
+          format: date-time
+      examples:
+        - id: 1
+          from_user_id: 1
+          to_user_id: 2
+          amount: 456.52
+          created_at: "2023-01-29T12:13:23Z"
+    Invoice:
+      title: Invoice
+      type: object
+      examples:
+        - id: 1
+          service_id: 23
+          order_id: 23423
+          user_id: 1
+          amount: 456.25
+          payment_status: new
+          created_at: "2023-01-28T16:14:34Z"
+          updated_at: "2023-01-28T16:14:34Z"
+      properties:
+        id:
+          type: integer
+          format: int64
+        service_id:
+          type: integer
+          format: int64
+        order_id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int64
+        amount:
+          type: number
+          format: decimal
+        payment_status:
+          $ref: "#/components/schemas/PaymentStatus"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      description: Invoice model
+    PaymentStatus:
+      title: PaymentStatus
+      type: string
+      enum:
+        - new
+        - accepted
+        - rejected
+        - error
+      description: Payment status model
+      examples:
+        - payment_status: new
+    ErrorResponse:
+      title: ErrorResponse
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+      examples:
+        - details: can't deposit money to user
+          error: "user 0 not found: sql: no rows in result set"
+  parameters:
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: limit number of items
+    cursor:
+      name: cursor
+      in: query
+      required: false
+      schema:
+        type: string
+      description: offset id
+  responses:
+    UserBalance:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              balance:
+                type: string
+          examples:
+            Example 1:
+              value:
+                balance: "890"
+        application/xml:
+          schema:
+            type: object
+            properties: {}
+  requestBodies:
+    CreateUser:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              email:
+                type: string
+                format: email
+          examples:
+            Example 1:
+              value:
+                name: John Doe
+                email: john@gmail.com
+      description: create user
