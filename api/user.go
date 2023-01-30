@@ -33,7 +33,7 @@ func (a *API) getBalance(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, JSON{"balance": user.Balance.String()})
 }
 
-// PUT /user/{id}/deposit - deposits money to user balance
+// PATCH /user/{id}/deposit - deposits money to user balance
 func (a *API) depositMoney(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
@@ -49,17 +49,13 @@ func (a *API) depositMoney(w http.ResponseWriter, r *http.Request) {
 	params.ID = int64(userID)
 
 	if params.Balance.IsNegative() || params.Balance.IsZero() {
-		SendErrorJSON(w, r, http.StatusBadRequest, errors.New(""), fmt.Sprintf("invalid balance: %s, should be greater then zero", params.Balance.String()))
+		SendErrorJSON(w, r, http.StatusBadRequest, errors.New("bad balance"), fmt.Sprintf("invalid balance: %s, should be greater than zero", params.Balance.String()))
 		return
 	}
 
 	user, err := a.userUcase.UpdateBalance(r.Context(), params)
-	if errors.Is(err, sql.ErrNoRows) {
-		SendErrorJSON(w, r, http.StatusNotFound, err, "user not found")
-		return
-	}
 	if err != nil {
-		SendErrorJSON(w, r, http.StatusInternalServerError, err, "")
+		SendErrorJSON(w, r, domain.GetStatusCode(err), err, "can't deposit money to user")
 		return
 	}
 

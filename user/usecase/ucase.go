@@ -57,6 +57,9 @@ func (uc *userUcase) UpdateBalance(ctx context.Context, params userModel.UpdateB
 	defer tx.Rollback()
 
 	user, err := uc.userStore.GetUser(ctx, params.ID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("user %d not found: %w", params.ID, err)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("can't get user: %w", err)
 	}

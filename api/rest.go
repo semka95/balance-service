@@ -26,7 +26,7 @@ func (a *API) NewRouter(userUcase domain.UserUsecase, transferUcase domain.Trans
 	r := chi.NewRouter()
 	r.Route("/api/v1/user", func(rapi chi.Router) {
 		rapi.Get("/{id}", a.getBalance)
-		rapi.Put("/{id}/deposit", a.depositMoney)
+		rapi.Patch("/{id}/deposit", a.depositMoney)
 		rapi.Put("/{id}/withdraw", a.withdrawMoney)
 		rapi.Post("/", a.createUser)
 	})
