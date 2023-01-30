@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/lib/pq"
 
+	"github.com/semka95/balance-service/domain"
 	userModel "github.com/semka95/balance-service/user/repository"
 )
 
@@ -23,12 +24,8 @@ func (a *API) getBalance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := a.userUcase.GetUser(r.Context(), int64(userID))
-	if errors.Is(err, sql.ErrNoRows) {
-		render.Status(r, http.StatusNoContent)
-		return
-	}
 	if err != nil {
-		SendErrorJSON(w, r, http.StatusInternalServerError, err, "can't get balance")
+		SendErrorJSON(w, r, domain.GetStatusCode(err), err, "can't get user balance")
 		return
 	}
 

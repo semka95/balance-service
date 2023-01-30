@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/shopspring/decimal"
@@ -28,6 +29,9 @@ func New(userStore userModel.Querier, db *sql.DB) domain.UserUsecase {
 // GetUser returns User by id
 func (uc *userUcase) GetUser(ctx context.Context, id int64) (*userModel.User, error) {
 	user, err := uc.userStore.GetUser(ctx, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		err = fmt.Errorf("user %d not found: %w", user.ID, err)
+	}
 
 	return &user, err
 }
