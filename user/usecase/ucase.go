@@ -30,7 +30,7 @@ func New(userStore userModel.Querier, db *sql.DB) domain.UserUsecase {
 func (uc *userUcase) GetUser(ctx context.Context, id int64) (*userModel.User, error) {
 	user, err := uc.userStore.GetUser(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {
-		err = fmt.Errorf("user %d not found: %w", user.ID, err)
+		err = fmt.Errorf("user %d not found: %w", id, err)
 	}
 
 	return &user, err
